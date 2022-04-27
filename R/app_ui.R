@@ -20,7 +20,10 @@ app_ui <- function(request) {
       tooltip(
         title = "This toggles the right sidebar",
         placement = "bottom",
-        actionButton(inputId = "controlbarToggle", label = "Toggle Controlbar", class = "mx-2")
+        actionButton(
+          inputId = "controlbarToggle",
+          label = "Toggle Controlbar", class = "mx-2"
+        )
       ),
       popover(
         title = "Toggle button",

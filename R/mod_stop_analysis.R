@@ -37,11 +37,11 @@ mod_stop_analysis_ui <- function(id) {
         solidHeader = TRUE,
         collapsible = FALSE,
         tagList(
-          p("Generate your racial statistics report for given year, including relative proportions of arrest, citation, warning, etc."),
+          p("Generate your racial statistics report for given year,
+          including relative proportions of arrest, citation, warning, etc."),
           selectInput(ns("year"), "Year", choices = 2010:2019, selected = 2019),
           downloadButton(ns("report"), "Generate")
         )
-
       )
     )
   )

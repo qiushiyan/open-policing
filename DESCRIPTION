@@ -15,6 +15,7 @@ Imports:
     golem (>= 0.3.2),
     RMySQL,
     shiny (>= 1.7.1),
+    shinyFeedback,
     thematic,
     waiter
 Encoding: UTF-8
