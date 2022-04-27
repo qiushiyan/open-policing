@@ -551,6 +551,8 @@ CREATE TABLE persons_archives(
     PRIMARY KEY (id) -- id is unique for all person info being archived
 );
 
+select * from persons_archives;
+
 DROP TRIGGER IF EXISTS before_delete_persons; -- after_delete_persons
 
 DELIMITER //
@@ -628,15 +630,13 @@ FROM location_archives;
 -- create person to insert values into persons_info
 DROP procedure IF EXISTS create_person; 
 DELIMITER // 
-
 CREATE PROCEDURE create_person(IN age TINYINT UNSIGNED, IN race VARChAR(50), IN sex VARCHAR(6))
 BEGIN
 	DECLARE sql_error INT DEFAULT FALSE;
     DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET sql_error = TRUE;
     
     START TRANSACTION;
-		
-        INSERT INTO persons (subject_age, subject_race, subject_sex)
+        INSERT INTO persons_info (subject_age, subject_race, subject_sex)
         VALUES (age, race, sex); 
 
     IF sql_error = FALSE THEN 
@@ -647,7 +647,73 @@ BEGIN
         SELECT ERRORS as error; 
 	END IF;
 END// 
+DELIMITER ;
 
+
+
+-- edit person
+DROP PROCEDURE IF EXISTS edit_person; 
+
+DELIMITER // 
+CREATE PROCEDURE edit_person (
+	IN number INT UNSIGNED, 
+	IN age TINYINT UNSIGNED, 
+    IN race VARChAR(50), 
+    IN sex VARCHAR(6)
+)
+BEGIN
+	DECLARE has_person INT UNSIGNED;
+	DECLARE sql_error INT DEFAULT FALSE;
+	DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET sql_error = TRUE;
+	
+	SELECT COUNT(*) 
+	INTO has_person
+	FROM persons_info
+	WHERE raw_row_number = number; 
+	
+	IF has_person = 0 THEN 
+		SIGNAL SQLSTATE '45000';  
+	END IF;
+    
+    IF sql_error = TRUE THEN
+		ROLLBACK;
+		SELECT "Person does not exist." as error;
+	ELSE 
+		UPDATE persons_info
+		SET subject_age = age, subject_race = race, subject_sex = sex
+		WHERE raw_row_number = number; 
+        COMMIT;
+		SELECT 'Edit successful' as ret; 
+    END IF;
+END // 
+DELIMITER ;
+
+
+
+DROP procedure IF EXISTS delete_person; 
+DELIMITER // 
+CREATE PROCEDURE delete_person (
+	IN number INT UNSIGNED
+)
+BEGIN
+	DECLARE has_person INT UNSIGNED;
+	DECLARE EXIT HANDLER FOR SQLEXCEPTION SELECT 'person not exists' as error;
+	
+    START TRANSACTION;
+		SELECT COUNT(*) 
+		INTO has_person
+		FROM persons_info
+		WHERE raw_row_number = number; 
+		
+		IF has_person = 0 THEN 
+			SIGNAL SQLSTATE '45000';
+		ELSE
+			DELETE FROM persons_info
+			WHERE raw_row_number = number;
+			SELECT 'deletion successful' as ret; 
+			COMMIT; 
+	END IF; 
+END // 
 DELIMITER ;
 
 

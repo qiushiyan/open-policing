@@ -3,7 +3,7 @@
 #' @importFrom bs4Dash dashboardSidebar dashboardBrand dashboardControlbar
 #' @importFrom bs4Dash sidebarHeader sidebarMenu menuItem tooltip popover
 #' @importFrom bs4Dash sidebarUserPanel tabItems tabItem
-#' @importFrom bs4Dash updateSidebar updateControlbar
+#' @importFrom bs4Dash updateSidebar updateControlbar bs4DashPage
 #' @importFrom bs4Dash box ribbon userBox userDescription
 #' @importFrom DBI dbGetQuery dbExecute
 #' @importFrom shinyFeedback useShinyFeedback showFeedbackWarning hideFeedback

@@ -6,10 +6,7 @@
 #'     DO NOT REMOVE.
 #' @noRd
 app_ui <- function(request) {
-  thematic_shiny()
-
   dashboardPage(
-    dark = TRUE,
     help = TRUE,
     fullscreen = TRUE,
     scrollToTop = TRUE,
@@ -47,7 +44,7 @@ app_ui <- function(request) {
         compact = FALSE,
         childIndent = TRUE,
         menuItem(
-          "about",
+          "About",
           tabName = "about",
           icon = icon("home")
         ),
@@ -83,12 +80,14 @@ app_ui <- function(request) {
     ),
     controlbar = dashboardControlbar(id = "controlbar"),
     body = dashboardBody(
-      tabItems(
-        mod_about_ui("about"),
-        mod_person_crud_ui("persons_crud"),
-        mod_stop_crud_ui("stops_crud"),
-        mod_person_analysis_ui("persons_analysis"),
-        mod_stop_analysis_ui("stops_analysis")
+      tagList(
+        tabItems(
+          mod_about_ui("about"),
+          mod_person_crud_ui("persons_crud"),
+          mod_stop_crud_ui("stops_crud"),
+          mod_person_analysis_ui("persons_analysis"),
+          mod_stop_analysis_ui("stops_analysis")
+        )
       )
     )
   )
@@ -107,16 +106,18 @@ golem_add_external_resources <- function() {
     "www",
     app_sys("app/www")
   )
-
-  useShinyFeedback()
-
   tags$head(
     favicon(),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "openpolicing"
     ),
-    # Add here other external resources
-    # for example, you can add shinyalert::useShinyalert()
+    tags$link(
+      rel = "stylesheet",
+      type = "text/css",
+      href = "www/style.css"
+    ),
+    thematic_shiny(),
+    useShinyFeedback()
   )
 }

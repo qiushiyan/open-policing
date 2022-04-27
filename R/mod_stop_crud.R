@@ -58,44 +58,21 @@ mod_stop_crud_server <- function(id, con) {
     stops <- suppressWarnings(dbGetQuery(con, "select * from stop_location limit 100"))
 
     observeEvent(input$create_stop_location, {
-      # if ((input$zipcode != "") && ((nchar(input$zipcode) != 5) || is.na(as.numeric(input$zipcode)))) {
-      #   showFeedbackWarning("zipcode", text = "zip code should be 5 digits")
-      # } else {
-      #   # hideFeedback("zipcode")
-      #   # id <- notify("Inserting new stop ...")
-      #   # on.exit(removeNotification(id = id))
-      #   # s <- glue::glue("CALL create_stop_location('{input$city}', {input$lat}, {input$lng}, '{input$state}', '{input$state_address}', {input$zipcode})")
-      #   # ret <- tryCatch(
-      #   #   dbGetQuery(con, s),
-      #   #   error = function(cond) {
-      #   #     notify(cond$message, id = id, type = "error")
-      #   #   }
-      #   # )
-
-      #   # if (is.null(ret$error)) {
-      #   #   notify(ret$error, id = id, type = "error")
-      #   # }
-
-      #   # notify("Insertion successful!", id = id)
-      #   # Sys.sleep(0.5)
-      # }
-
-
       id <- notify("Inserting new stop ...")
       on.exit(removeNotification(id = id))
-      s <- glue::glue("CALL create_stop_location('{input$city}', {input$lat}, {input$lng}, '{input$state}', '{input$state_address}', {input$zipcode})")
-      ret <- tryCatch(
-        dbGetQuery(con, s),
+      lat <- as.numeric(input$lat)
+      lng <- as.numeric(input$lng)
+      s <- glue::glue("INSERT INTO stop_location (city, lat, lng, state, state_address, zipcode) VALUES ('{input$city}', {lat}, {lng}, '{input$state}', '{input$state_address}', '{input$zip_code}')")
+      tryCatch(
+        {
+          # dbGetQuery(con, s)
+          notify("Insertion successful!", id = id)
+        },
         error = function(cond) {
           notify(cond$message, id = id, type = "error")
         }
       )
-      # if (is.null(ret$error)) {
-      #   notify(ret$error, id = id, type = "error")
-      # }
-
-      notify("Insertion successful!", id = id)
-      Sys.sleep(0.5)
+      Sys.sleep(2)
     })
 
 

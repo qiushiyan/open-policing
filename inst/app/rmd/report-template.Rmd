@@ -1,0 +1,110 @@
+---
+title: "Analysis of open policing data in `r params$year`"
+output: pdf_document 
+params:
+  year: 2018
+---
+
+On a typical day in the United States, police officers make more than 50,000 traffic stops. Our team is gathering, analyzing, and releasing records from millions of traffic stops by law enforcement agencies across the country. Our goal is to help researchers, journalists, and policymakers investigate and improve interactions between police and the public.
+
+```{r, include=FALSE}
+library(data.table)
+library(ggplot2)
+library(DBI)
+library(dplyr)
+
+theme_set(theme_minimal())
+
+plot_prop <- function(df, var) {
+  df |> 
+  mutate(subject_race = forcats::fct_reorder(subject_race, -{{ var }})) |> 
+  ggplot(aes(subject_race, {{ var }})) + 
+    geom_col(aes(fill = subject_race)) +
+    geom_text(aes(label = scales::label_percent()({{ var }})), vjust = -0.5) + 
+    scale_y_continuous(labels = scales::label_percent()) + 
+    scale_fill_brewer(palette = "PuBuGn", direction = -1, name = NULL) + 
+    theme(legend.position = "top",
+          axis.title = element_blank()) 
+}
+
+ymisc::set_knitr_options(echo = FALSE)
+
+con <- DBI::dbConnect(RMySQL::MySQL(),
+                      host   = "localhost",
+                      dbname = "stanford_policing",
+                      user      = "root",
+                      password  = "",
+                      port     = 3306)
+
+year <- params$year
+race <- params$race
+
+s <- glue::glue("
+SELECT t2.subject_race, type, arrest_made, citation_issued, warning_issued, violation,
+        frisk_performed, search_conducted 
+FROM (SELECT 
+	raw_row_number,
+	type, 
+  arrest_made,
+  citation_issued, 
+  warning_issued, 
+  violation, 
+  frisk_performed,
+  search_conducted 
+FROM after_stop_actions) t1 INNER JOIN (
+  SELECT raw_row_number, subject_race
+  FROM persons_info
+) t2 ON t1.raw_row_number = t2.raw_row_number 
+  INNER JOIN (
+    SELECT distinct raw_row_number 
+    FROM stops_info 
+    WHERE EXTRACT(year FROM date) = {year}
+) t3 ON t2.raw_row_number = t3.raw_row_number
+")
+
+ret = as.data.table(dbGetQuery(con, s))
+```
+
+
+```{r}
+props <- ret[subject_race != "NA", .(
+  arrest_prop = sum(ifelse(arrest_made == "TRUE", 1, 0)) / .N,
+  citation_prop = sum(ifelse(citation_issued == "TRUE", 1, 0)) / .N,
+  warning_prop = sum(ifelse(warning_issued == "TRUE", 1, 0)) / .N,
+  frisk_prop = sum(ifelse(frisk_performed == "TRUE", 1, 0)) / .N, 
+  search_prop = sum(ifelse(search_conducted == "TRUE", 1, 0)) / .N
+), subject_race]
+```
+
+
+Here is your report of some racial statistics 
+
+## Arrest proportions 
+
+```{r}
+plot_prop(props, arrest_prop)
+```
+
+## Citation proportion 
+
+```{r}
+plot_prop(props, citation_prop)
+```
+
+## Warning proportion 
+
+```{r}
+plot_prop(props, warning_prop)
+```
+
+## Frisk propotion
+
+```{r}
+plot_prop(props, frisk_prop)
+```
+
+## Search proportion 
+
+```{r}
+plot_prop(props, search_prop)
+```

@@ -11,7 +11,8 @@ mod_db_server <- function(id){
                           dbname = "stanford_policing",
                           user      = "root",
                           password  = "",
-                          port     = 3306)
+                          port     = 3306,
+                          client_flag = CLIENT_MULTI_STATEMENTS + CLIENT_MULTI_RESULTS)
 
     con
   })

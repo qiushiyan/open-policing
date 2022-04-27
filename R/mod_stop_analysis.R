@@ -14,7 +14,7 @@ mod_stop_analysis_ui <- function(id) {
     fluidRow(
       box(
         title = "Stop proportions by race",
-        width = 6,
+        width = 4,
         status = "white",
         solidHeader = TRUE,
         collapsible = FALSE,
@@ -22,12 +22,27 @@ mod_stop_analysis_ui <- function(id) {
       ),
       box(
         title = "Arrest proportions by race",
-        width = 6,
+        width = 8,
         status = "white",
         solidHeader = TRUE,
         collapsible = FALSE,
         echarts4rOutput(ns("arrest_prop_race"))
       ),
+    ),
+    fluidRow(
+      box(
+        title = "Report",
+        witdth = 6,
+        status = "indigo",
+        solidHeader = TRUE,
+        collapsible = FALSE,
+        tagList(
+          p("Generate your racial statistics report for given year, including relative proportions of arrest, citation, warning, etc."),
+          selectInput(ns("year"), "Year", choices = 2010:2019, selected = 2019),
+          downloadButton(ns("report"), "Generate")
+        )
+
+      )
     )
   )
 }
@@ -49,7 +64,6 @@ mod_stop_analysis_server <- function(id, con) {
         e_charts(year) |>
         e_line(prop) |>
         e_tooltip(trigger = "axis") |>
-        e_legend(textStyle = list(color = "white")) |>
         e_x_axis(year)
     )
 
@@ -58,11 +72,29 @@ mod_stop_analysis_server <- function(id, con) {
         mutate(subject_race = forcats::fct_reorder(subject_race, arrest_prop)) |>
         group_by(subject_race) |>
         e_charts(subject_race, reorder = FALSE) |>
-        e_bar(arrest_prop) |>
+        e_bar(arrest_prop, width = 5) |>
         e_tooltip() |>
-        e_labels(position = "right") |>
-        e_legend(textStyle = list(color = "white")) |>
+        e_labels(position = "right", formatter = htmlwidgets::JS("
+          function(params){
+            return((params.value[0] * 100).toFixed(3) + '%')
+          }
+      ")) |>
         e_flip_coords()
+    )
+
+    output$report <- downloadHandler(
+      filename = "report.pdf",
+      content = function(file) {
+        params <- list(year = input$year)
+
+        id <- notify("Rendering report...")
+        on.exit(removeNotification(id), add = TRUE)
+
+        callr::r(
+          render_report,
+          list(input = app_sys("app/rmd/report-template.Rmd"), output = file, params = params)
+        )
+      }
     )
   })
 }

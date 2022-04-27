@@ -23,9 +23,9 @@ mod_about_ui <- function(id) {
       ),
       status = "purple",
       elevation = 4,
-      width = 12,
+      width = 8,
       includeMarkdown(app_sys("app/md/about.md"))
-    ),
+    )
   )
 }
 
